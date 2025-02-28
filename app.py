@@ -20,14 +20,21 @@ def ebay_deletion():
             return jsonify({"challengeResponse": challenge_response}), 200
 
     elif request.method == "POST":
-        # Handle actual account deletion requests
-        data = request.get_json()
-        if data and data.get("notificationEventName") == "EBAY_ACCOUNT_CLOSURE":
-            ebay_user_id = data.get("recipient", {}).get("username")
-            print(f"Received eBay account closure request for user: {ebay_user_id}")
-            return jsonify({"message": "Account deletion request received"}), 200
+        # Handle actual account deletion notifications
+        try:
+            data = request.get_json()
+            if data and data.get("notificationEventName") == "EBAY_ACCOUNT_CLOSURE":
+                ebay_user_id = data.get("recipient", {}).get("username")
+                print(f"Received eBay account closure request for user: {ebay_user_id}")
 
-    return jsonify({"error": "Invalid request"}), 405  # Return correct error for unsupported methods
+                # Simulating deletion logic (Replace with actual database deletion)
+                return jsonify({"message": "Account deletion request processed"}), 200
+            else:
+                return jsonify({"error": "Invalid notification format"}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    return jsonify({"error": "Invalid request method"}), 405  # Explicitly return 405 for unsupported methods
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    app.run(host="0.0.0.0", p
