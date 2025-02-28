@@ -18,16 +18,16 @@ def ebay_deletion():
             response_data = challenge_code + VERIFICATION_TOKEN + endpoint
             challenge_response = hashlib.sha256(response_data.encode()).hexdigest()
             return jsonify({"challengeResponse": challenge_response}), 200
-    
+
     elif request.method == "POST":
         # Handle actual account deletion requests
         data = request.get_json()
-        if data.get("notificationEventName") == "EBAY_ACCOUNT_CLOSURE":
+        if data and data.get("notificationEventName") == "EBAY_ACCOUNT_CLOSURE":
             ebay_user_id = data.get("recipient", {}).get("username")
             print(f"Received eBay account closure request for user: {ebay_user_id}")
             return jsonify({"message": "Account deletion request received"}), 200
 
-    return jsonify({"error": "Invalid request"}), 400
+    return jsonify({"error": "Invalid request"}), 405  # Return correct error for unsupported methods
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
