@@ -26,9 +26,7 @@ def ebay_deletion():
         # 🔹 Log the full raw request body and headers for debugging
         try:
             raw_data = request.get_data(as_text=True)
-            headers = dict(request.headers)
             logging.debug(f"Received POST request raw body: {raw_data}")
-            logging.debug(f"Request Headers: {json.dumps(headers, indent=2)}")
 
             # 🔹 Try parsing JSON data
             try:
@@ -39,22 +37,22 @@ def ebay_deletion():
 
             logging.debug(f"Parsed JSON request: {json.dumps(data, indent=2)}")
 
-            # 🔹 Check if `notificationEventName` is present
-            event_name = data.get("notificationEventName")
-            if not event_name:
-                logging.error(f"Missing 'notificationEventName'. Full Request: {json.dumps(data, indent=2)}")
-                return jsonify({"error": "Invalid request format: missing 'notificationEventName'"}), 400
+            # 🔹 Extract event type from eBay's actual request format
+            event_topic = data.get("metadata", {}).get("topic")
+            if not event_topic:
+                logging.error(f"Missing 'metadata.topic'. Full Request: {json.dumps(data, indent=2)}")
+                return jsonify({"error": "Invalid request format: missing 'metadata.topic'"}), 400
 
             # 🔹 Process eBay Account Closure Request
-            if event_name == "EBAY_ACCOUNT_CLOSURE":
-                ebay_user_id = data.get("recipient", {}).get("username", "Unknown User")
+            if event_topic == "MARKETPLACE_ACCOUNT_DELETION":
+                ebay_user_id = data.get("notification", {}).get("data", {}).get("username", "Unknown User")
                 logging.info(f"Processing eBay account closure for user: {ebay_user_id}")
 
                 # 🔹 Simulating deletion logic (Replace with actual database logic)
                 return jsonify({"message": f"Account deletion request processed for {ebay_user_id}"}), 200
 
             else:
-                logging.warning(f"Unsupported notification event: {event_name}")
+                logging.warning(f"Unsupported notification event: {event_topic}")
                 return jsonify({"error": "Unsupported notification event"}), 400
 
         except Exception as e:
@@ -65,4 +63,3 @@ def ebay_deletion():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
-
