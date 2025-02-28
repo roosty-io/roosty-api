@@ -8,7 +8,7 @@ app = Flask(__name__)
 # 🔹 Enable Logging for Debugging
 logging.basicConfig(level=logging.DEBUG)
 
-# 🔹 eBay Verification Token (Replace with the actual token from eBay Developer Portal)
+# 🔹 eBay Verification Token (Replace with your actual token from eBay Developer Portal)
 VERIFICATION_TOKEN = "roosty_verification_token_1234567890"
 
 @app.route("/api/ebay-deletion", methods=["GET", "POST"])
@@ -23,19 +23,26 @@ def ebay_deletion():
             return jsonify({"challengeResponse": challenge_response}), 200
 
     elif request.method == "POST":
-        # 🔹 Log the full request body for debugging
+        # 🔹 Log the full raw request body and headers for debugging
         try:
-            data = request.get_json()
-            if data is None:
-                logging.error("Received empty request body.")
-                return jsonify({"error": "Missing JSON body"}), 400
+            raw_data = request.get_data(as_text=True)
+            headers = dict(request.headers)
+            logging.debug(f"Received POST request raw body: {raw_data}")
+            logging.debug(f"Request Headers: {json.dumps(headers, indent=2)}")
 
-            logging.debug(f"Received POST request: {json.dumps(data, indent=2)}")
+            # 🔹 Try parsing JSON data
+            try:
+                data = json.loads(raw_data)
+            except json.JSONDecodeError:
+                logging.error("Invalid JSON received.")
+                return jsonify({"error": "Invalid JSON format"}), 400
+
+            logging.debug(f"Parsed JSON request: {json.dumps(data, indent=2)}")
 
             # 🔹 Check if `notificationEventName` is present
             event_name = data.get("notificationEventName")
             if not event_name:
-                logging.error("Missing 'notificationEventName' in request.")
+                logging.error(f"Missing 'notificationEventName'. Full Request: {json.dumps(data, indent=2)}")
                 return jsonify({"error": "Invalid request format: missing 'notificationEventName'"}), 400
 
             # 🔹 Process eBay Account Closure Request
