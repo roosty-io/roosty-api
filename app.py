@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 import hashlib
-import os
 
 app = Flask(__name__)
 
@@ -13,8 +12,6 @@ def ebay_webhook():
     if request.method == "GET":
         # eBay validation request
         challenge_code = request.args.get("challenge_code")
-        verification_token = request.args.get("verification_token", "")
-
         if not challenge_code:
             return jsonify({"error": "Missing challenge_code"}), 400
 
@@ -26,17 +23,25 @@ def ebay_webhook():
         return jsonify({"challengeResponse": challenge_response}), 200
 
     elif request.method == "POST":
-        # Handle deletion notifications
+        # Handle eBay account deletion notification
         try:
             data = request.json
             print("🔔 Received eBay Deletion Notification:", data)
 
-            if "notification" in data and data["notification"].get("topic") == "MARKETPLACE_ACCOUNT_DELETION":
-                deleted_user = data["notification"]["payload"].get("userId", "Unknown User")
-                print(f"🚨 eBay account deleted: {deleted_user}")
-                return jsonify({"status": "received"}), 200
+            # Check if the notification is about account deletion
+            if isinstance(data, dict) and "notification" in data:
+                notification = data["notification"]
+                if notification.get("topic") == "MARKETPLACE_ACCOUNT_DELETION":
+                    deleted_user = notification.get("payload", {}).get("userId", "Unknown User")
+                    print(f"🚨 eBay account deleted: {deleted_user}")
+                    return jsonify({"status": "received"}), 200
+                else:
+                    print("❌ Invalid notification type received")
+                    return jsonify({"error": "Invalid notification type"}), 400
             else:
-                return jsonify({"error": "Invalid notification format"}), 400
+                print("❌ Malformed eBay notification payload")
+                return jsonify({"error": "Malformed request"}), 400
+
         except Exception as e:
             print(f"❌ Error processing eBay notification: {str(e)}")
             return jsonify({"error": "Internal Server Error"}), 500
