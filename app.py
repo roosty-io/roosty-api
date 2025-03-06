@@ -1,19 +1,20 @@
+import os
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Your eBay verification token
+# Define the verification token as a constant (Replace with your actual token)
 VERIFICATION_TOKEN = "TYCXkCynpUtEipOOfG3EJcR1U0QarK4rAwSp2AL2URM"
 
 @app.route("/ebay-webhook", methods=["GET"])
-def verify_ebay_webhook():
-    """Handles eBay's webhook verification request"""
+def ebay_webhook():
     challenge_code = request.args.get("challenge_code")
     verification_token = request.args.get("verification_token")
 
+    # Debugging: Print incoming values
     print(f"Received verification request: challenge_code={challenge_code}, verification_token={verification_token}")
 
-    # Ensure verification_token matches eBay's expected token
+    # Validate the verification token
     if verification_token == VERIFICATION_TOKEN:
         return jsonify({"challengeResponse": challenge_code}), 200
     else:
