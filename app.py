@@ -10,7 +10,7 @@ def verify():
     challenge_code = request.args.get("challenge_code")
 
     if challenge_code:
-        print(f"Received verification request: challenge_code={challenge_code}")
+        print(f"✅ Received verification request: challenge_code={challenge_code}")
         return jsonify({"challengeResponse": challenge_code}), 200
 
     return jsonify({"error": "Missing challenge_code"}), 400
@@ -26,9 +26,10 @@ def handle_notification():
     verification_token = data.get("verification_token")
 
     if verification_token != VERIFICATION_TOKEN:
+        print("❌ Invalid verification token received")
         return jsonify({"error": "Invalid verification token"}), 403
 
-    print(f"Received deletion request: {data}")
+    print(f"✅ Received deletion request: {data}")
     return jsonify({"status": "success"}), 200
 
 if __name__ == "__main__":
