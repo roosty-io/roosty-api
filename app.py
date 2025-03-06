@@ -9,10 +9,15 @@ VERIFICATION_TOKEN = "TYCXkCynpUtEipOOfG3EJcR1U0QarK4rAwSp2AL2URM"
 def ebay_webhook():
     if request.method == 'GET':
         verification_token = request.args.get('verification_token')
-        challenge = request.args.get('challenge')
+        challenge = request.args.get('challenge')  # Expected challenge
+        challenge_code = request.args.get('challenge_code')  # eBay's challenge_code
+
+        # Use the correct challenge parameter
+        if challenge is None:
+            challenge = challenge_code  # Fallback if eBay sends challenge_code
 
         if verification_token == VERIFICATION_TOKEN and challenge:
-            return jsonify({"challengeResponse": challenge})
+            return jsonify({"challengeResponse": challenge})  # Send response
 
         return jsonify({"error": "Invalid verification token"}), 400
 
