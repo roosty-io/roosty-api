@@ -28,15 +28,16 @@ def ebay_webhook():
             data = request.json
             print("🔔 Received eBay Deletion Notification:", data)
 
-            # Check if the notification is about account deletion
-            if isinstance(data, dict) and "notification" in data:
-                notification = data["notification"]
-                if notification.get("topic") == "MARKETPLACE_ACCOUNT_DELETION":
-                    deleted_user = notification.get("payload", {}).get("userId", "Unknown User")
+            # Correctly check the notification type under "metadata"
+            if isinstance(data, dict) and "metadata" in data:
+                notification_topic = data["metadata"].get("topic", "")
+                
+                if notification_topic == "MARKETPLACE_ACCOUNT_DELETION":
+                    deleted_user = data["notification"]["data"].get("userId", "Unknown User")
                     print(f"🚨 eBay account deleted: {deleted_user}")
                     return jsonify({"status": "received"}), 200
                 else:
-                    print("❌ Invalid notification type received")
+                    print(f"❌ Unexpected notification type: {notification_topic}")
                     return jsonify({"error": "Invalid notification type"}), 400
             else:
                 print("❌ Malformed eBay notification payload")
