@@ -2,25 +2,26 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-@app.route("/", methods=["GET"])
-def health_check():
-    return jsonify({"message": "Webhook is running"}), 200
+# eBay Verification Token
+VERIFICATION_TOKEN = "TYCXkCynpUtEipOOfG3EJcR1U0QarK4rAwSp2AL2URM"
 
-@app.route("/ebay-webhook", methods=["POST"])
+@app.route("/ebay-webhook", methods=["GET", "POST"])
 def ebay_webhook():
-    try:
+    if request.method == "GET":
+        # Handle eBay verification challenge
+        verification_token = request.args.get("verification_token")
+        challenge = request.args.get("challenge")
+
+        if verification_token == VERIFICATION_TOKEN and challenge:
+            return jsonify({"challengeResponse": challenge})
+
+        return jsonify({"error": "Invalid verification token"}), 403
+
+    elif request.method == "POST":
+        # Handle actual webhook events (log them for now)
         data = request.json
-        print("Received Webhook Data:", data)
-
-        # Verify the notification type
-        if "notification" in data and data["notification"] == "MARKETPLACE_ACCOUNT_DELETION":
-            print("Processing account deletion request...")
-            return jsonify({"message": "Account deletion request received"}), 200
-
-        return jsonify({"message": "Webhook received"}), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print("Received webhook data:", data)
+        return jsonify({"status": "received"}), 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
